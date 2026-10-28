@@ -1,0 +1,63 @@
+name: Laravel security migration
+
+on:
+  push:
+    branches: [security/laravel-major-upgrade]
+    paths:
+      - 'composer.json'
+      - 'composer.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - 'phpunit.xml'
+      - 'resources/**'
+      - 'app/**'
+      - '.github/workflows/security-migration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  dependency-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Resolve Composer dependencies and refresh lockfile
+        run: composer update --no-interaction --prefer-dist
+      - name: Resolve npm dependencies and refresh lockfile
+        run: npm install --no-audit
+      - name: Commit generated lockfiles
+        run: |
+          if ! git diff --quiet -- composer.lock package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add composer.lock package-lock.json
+            git commit -m "chore(security): refresh dependency lockfiles"
+            git push
+          fi
+      - name: Audit Composer dependencies
+        run: composer audit --no-interaction
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=moderate
+      - name: Build frontend assets
+        run: npm run build
+      - name: Run Laravel tests
+        run: set -o pipefail; vendor/bin/phpunit --display-errors --display-phpunit-deprecations 2>&1 | tee phpunit-output.log
+      - name: Upload PHPUnit diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-diagnostics
+          path: phpunit-output.log
+          if-no-files-found: ignore
