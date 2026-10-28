@@ -27,7 +27,7 @@ jobs:
       - name: Resolve patched dependency versions
         run: >-
           composer update
-          laravel/framework facade/ignition guzzlehttp/guzzle guzzlehttp/psr7
+          laravel/framework laravel/tinker facade/ignition guzzlehttp/guzzle guzzlehttp/psr7
           league/flysystem nesbot/carbon swiftmailer/swiftmailer
           symfony/http-foundation symfony/http-kernel symfony/mime
           symfony/process symfony/routing phpunit/phpunit psy/psysh
