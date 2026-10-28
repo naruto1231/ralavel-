@@ -31,7 +31,7 @@ jobs:
           league/flysystem nesbot/carbon swiftmailer/swiftmailer
           symfony/http-foundation symfony/http-kernel symfony/mime
           symfony/process symfony/routing phpunit/phpunit psy/psysh
-          --with-all-dependencies --no-scripts --no-interaction
+          --with-all-dependencies --no-scripts --no-interaction --no-security-blocking
       - name: Validate Composer files
         run: composer validate --no-check-publish
       - name: Report remaining Composer advisories
