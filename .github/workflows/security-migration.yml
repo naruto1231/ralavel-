@@ -37,14 +37,6 @@ jobs:
         run: composer update --no-interaction --prefer-dist
       - name: Resolve npm dependencies and refresh lockfile
         run: npm install --no-audit
-      - name: Audit Composer dependencies
-        run: composer audit --no-interaction
-      - name: Audit npm dependencies
-        run: npm audit --audit-level=moderate
-      - name: Build frontend assets
-        run: npm run build
-      - name: Run Laravel tests
-        run: vendor/bin/phpunit
       - name: Commit generated lockfiles
         run: |
           if ! git diff --quiet -- composer.lock package-lock.json; then
@@ -54,3 +46,18 @@ jobs:
             git commit -m "chore(security): refresh dependency lockfiles"
             git push
           fi
+      - name: Audit Composer dependencies
+        run: composer audit --no-interaction
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=moderate
+      - name: Build frontend assets
+        run: npm run build
+      - name: Run Laravel tests
+        run: set -o pipefail; vendor/bin/phpunit --display-errors --display-phpunit-deprecations 2>&1 | tee phpunit-output.log
+      - name: Upload PHPUnit diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-diagnostics
+          path: phpunit-output.log
+          if-no-files-found: ignore
