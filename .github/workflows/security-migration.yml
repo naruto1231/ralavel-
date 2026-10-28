@@ -9,6 +9,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'vite.config.js'
+      - 'phpunit.xml'
       - 'resources/**'
       - 'app/**'
       - '.github/workflows/security-migration.yml'
