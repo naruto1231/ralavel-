@@ -1,0 +1,47 @@
+name: Regenerate security dependency lockfile
+
+on:
+  push:
+    branches:
+      - security/update-vulnerable-dependencies
+
+permissions:
+  contents: write
+
+jobs:
+  update-composer-lock:
+    if: "!contains(github.event.head_commit.message, 'chore: regenerate composer.lock')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out security branch
+        uses: actions/checkout@v4
+        with:
+          ref: security/update-vulnerable-dependencies
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2
+          coverage: none
+      - name: Resolve patched dependency versions
+        run: >-
+          composer update
+          laravel/framework facade/ignition guzzlehttp/guzzle guzzlehttp/psr7
+          league/flysystem nesbot/carbon swiftmailer/swiftmailer
+          symfony/http-foundation symfony/http-kernel symfony/mime
+          symfony/process symfony/routing phpunit/phpunit psy/psysh
+          --with-all-dependencies --no-scripts --no-interaction
+      - name: Validate Composer files
+        run: composer validate --no-check-publish
+      - name: Commit updated lockfile
+        run: |
+          if git diff --quiet -- composer.lock; then
+            echo "No composer.lock changes were generated."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add composer.lock
+          git commit -m "chore: regenerate composer.lock"
+          git push origin security/update-vulnerable-dependencies
