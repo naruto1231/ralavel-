@@ -30,7 +30,7 @@ jobs:
         run: npm audit --audit-level=moderate || true
       - name: Commit updated lockfile
         run: |
-          if git diff --quiet -- package-lock.json; then
+          if ! git status --porcelain -- package-lock.json | grep -q .; then
             echo "No package-lock.json changes were generated."
             exit 0
           fi
