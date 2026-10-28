@@ -1,8 +1,8 @@
 name: Laravel security migration
 
 on:
-  pull_request:
-    branches: [master]
+  push:
+    branches: [security/laravel-major-upgrade]
     paths:
       - 'composer.json'
       - 'composer.lock'
@@ -12,8 +12,6 @@ on:
       - 'resources/**'
       - 'app/**'
       - '.github/workflows/security-migration.yml'
-  push:
-    branches: [security/laravel-major-upgrade]
 
 permissions:
   contents: write
@@ -24,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref || github.ref_name }}
+          ref: ${{ github.ref_name }}
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
